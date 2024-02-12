@@ -28,6 +28,37 @@ export const chatStyles = {
     alignItems: 'center',
     marginBottom: '10px',
   },
+  typingIndicatorContainer: {
+    display: 'flex',
+    alignItems: 'left',
+    marginBottom: '10px',
+    fontSize: '10px',
+  },
+  labelStyles: {
+    marginRight: '10px',
+    width: '20%',
+    textAlign: 'left',
+  },
+  inputStyles: {
+    flex: 1,
+    padding: '10px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+  },
+  formRowStyles: {
+    marginBottom: '10px',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  submitButtonStyles: {
+    marginTop: '20px',
+    padding: '10px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+    cursor: 'pointer',
+    width: '30%',
+    alignSelf: 'center',
+  }
 };
 
 export const messageStyles = {
