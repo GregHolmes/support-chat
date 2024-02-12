@@ -1,7 +1,16 @@
 import { Request, Response } from 'express';
+import { Op } from 'sequelize';
 import db from '../models';
 import { createJWT } from '../utils/auth';
-import { generateToken } from '../services/ably';
+import { tokenRequest } from '../services/ably';
+
+interface CustomRequest extends Request {
+  user?: {
+    iss: string,
+    sub: string,
+    iat: number
+  };
+}
 
 async function login(req: Request, res: Response): Promise<void> {
   try {
@@ -23,7 +32,7 @@ async function login(req: Request, res: Response): Promise<void> {
     }
 
     // Create a JWT for the user
-    const jwtToken = createJWT(user.username);
+    const jwtToken = await createJWT(user.username);
 
     // Log successful login
     console.log(`User logged in: ${user.email}`);
@@ -36,25 +45,72 @@ async function login(req: Request, res: Response): Promise<void> {
   }
 }
 
-async function ablyToken(req: Request, res: Response): Promise<void> {
+async function register(req: Request, res: Response): Promise<void> {
   try {
-    const user = await db.User.findOne({ where: { id: req.user.sub } })
+    const { email, password, username } = req.body;
+
+    // Input validation
+    if (!email || !password || !username) {
+      res.status(400).json({ error: "Invalid input", message: "Email, password, and username are required" });
+      return;
+    }
+    console.log(db.User);
+    const existingUser = await db.User.findOne({ where: {
+      [Op.or]: [{username}, {email}]
+    } });
+
+    if (existingUser) {
+      console.log('User already exists with either email or username');
+      res.sendStatus(401);
+      return;
+    }
+
+    // Create a user.
+    const user = await db.User.create({
+      email,
+      password,
+      username
+    })
+
+    // Create a JWT for the user
+    const jwtToken = await createJWT(user.username);
+
+    // Log successful login
+    console.log(`User registered in: ${user.email}`);
+
+    // Return the JWT
+    res.status(200).json({ token: jwtToken });
+  } catch (error) {
+    console.error('Error during register:', error);
+    res.status(500).json({ error: "Internal Server Error", message: "An unexpected error occurred" });
+  }
+}
+
+async function ablyTokenRequest(req: CustomRequest, res: Response): Promise<void> {
+  try {
+    if (req.user?.sub === undefined) {
+      console.log('undefined');
+      res.sendStatus(404)
+  
+      return
+    }
+    
+    const user = await db.User.findOne({ where: { username: req.user.sub } })
 
     if (!user) {
-      // User already exists.. redirect to register
+      console.log('user doesnt exist');
       res.sendStatus(404)
   
       return
     }
 
-    const ablyAuthToken = await generateToken(req, res)
+    res.json(await tokenRequest(user.username))
 
-    // Return the JWT
-    res.status(200).json({ token: ablyAuthToken });
+    return
   } catch (error) {
     console.error('Error during login:', error);
     res.status(500).json({ error: "Internal Server Error", message: "An unexpected error occurred" });
   }
 }
 
-export { login, ablyToken };
+export { ablyTokenRequest, login, register };

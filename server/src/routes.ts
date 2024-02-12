@@ -5,10 +5,14 @@ import * as authUtil from './utils/auth';
 const router = Router();
 
 function routes(): Router {
+  router.get('/', (req, res) => {
+    res.send('hello world')
+  })
   router.post('/login', auth.login);
-  router.get('/chat-token', authUtil.verifyJWT, auth.ablyToken);
+  router.post('/register', auth.register);
+  router.get('/request-token', authUtil.verifyJWT, auth.ablyTokenRequest);
 
   return router;
 }
 
-export = routes;
+export { routes };
