@@ -3,19 +3,23 @@ import { messageInputStyles as styles } from '../../styles';
 
 interface MessageInputProps {
   sendMessage: (newMessage: string) => void;
+  setMessage: (message: string) => void;
+  message: string;
+  onType: (message: string) => void;
 }
 
-export const MessageInput = ({ sendMessage }: MessageInputProps) => {
-  const [message, setMessage] = useState<string>('');
+export const MessageInput = ({ sendMessage, message, setMessage, onType}: MessageInputProps) => {
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     setMessage(event.target.value);
+    onType(event.target.value);
   };
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     sendMessage(message);
     setMessage('');
+    onType('');
   };
 
   return (
